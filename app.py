@@ -1,41 +1,92 @@
 import streamlit as st
 import google.generativeai as genai
 
-# --- 1. 接続診断ログ（画面には出さず、エラー時のみ詳細表示） ---
+# --- 1. セッション（記憶）の初期化 ---
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+if 'char_data' not in st.session_state:
+    st.session_state.char_data = ""
+if 'story_data' not in st.session_state:
+    st.session_state.story_data = ""
+if 'preview_data' not in st.session_state:
+    st.session_state.preview_data = None
+
+# --- 2. 診断機能付き：AI呼び出し関数 ---
 def safe_generate_content(prompt):
     try:
         if "GEMINI_API_KEY" not in st.secrets:
-            return "ERROR:KEY_MISSING", "SecretsにAPIキーが見つかりません。"
+            return "ERROR:KEY_MISSING", "Secretsにキーが設定されていません。"
         
         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        # あなたのリストにあった「gemini-2.0-flash」を試行
         model = genai.GenerativeModel('gemini-2.0-flash')
         response = model.generate_content(prompt)
         return "SUCCESS", response.text
-    
     except Exception as e:
-        # ここで「真の原因」をキャッチして報告する
         return "ERROR:API_FAIL", str(e)
 
-# --- 2. Step 3 の実行ロジック ---
-if st.session_state.step == 3:
+st.title("📖 AI絵本メーカー (診断・回避機能付)")
+
+# --- Step 1: キャラクター設定 ---
+if st.session_state.step == 1:
+    st.header("Step 1: キャラクター設定")
+    char_input = st.text_area("主人公はどんな人？", value=st.session_state.char_data)
+    if st.button("次へ"):
+        st.session_state.char_data = char_input
+        st.session_state.step = 2
+        st.rerun()
+
+# --- Step 2: お話の内容 ---
+elif st.session_state.step == 2:
+    st.header("Step 2: お話の内容")
+    story_input = st.text_area("どんなお話？", value=st.session_state.story_data)
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("戻る"):
+            st.session_state.step = 1
+            st.rerun()
+    with col2:
+        if st.button("次へ"):
+            st.session_state.story_data = story_input
+            st.session_state.step = 3
+            st.rerun()
+
+# --- Step 3: 最終確認と診断実行 ---
+elif st.session_state.step == 3:
     st.header("Step 3: 最終確認")
-    # (確認表示は省略)
+    st.info(f"キャラ: {st.session_state.char_data}\n\nストーリー: {st.session_state.story_data}")
     
     if st.button("✨ 制作プランを確定する"):
         with st.spinner("AIによる分析を実行中..."):
-            status, result = safe_generate_content(f"絵本の構成案：{st.session_state.char_data}")
+            status, result = safe_generate_content(
+                f"絵本作家として構成案を作って。キャラ：{st.session_state.char_data}、話：{st.session_state.story_data}"
+            )
             
             if status == "SUCCESS":
                 st.session_state.preview_data = result
             else:
-                # 失敗しても、原因を警告として出しつつ、ダミーで「進める」
-                st.error(f"API接続に失敗しました。原因: {result}")
-                st.warning("開発を継続するため、一時的にデモ用データを作成します。")
+                st.error(f"【APIエラー】原因: {result}")
+                st.warning("現在、APIが制限されています。画面確認のためダミー案を表示します。")
                 st.session_state.preview_data = f"（デモ用）\n主人公：{st.session_state.char_data}の物語\n1. 森での出会い..."
             
             st.session_state.step = 3.5
             st.rerun()
-    if st.button("やり直す"): 
+
+# --- Step 3.5: プラン確認 ---
+elif st.session_state.step == 3.5:
+    st.header("Step 3.5: AI制作プランの確認")
+    st.write(st.session_state.preview_data)
+    
+    if st.button("やり直す"):
         st.session_state.step = 3
+        st.rerun()
+    if st.button("このプランで本番生成へ"):
+        st.session_state.step = 4
+        st.rerun()
+
+# --- Step 4: 完成 ---
+elif st.session_state.step == 4:
+    st.header("Step 4: 生成プロセス")
+    st.success("（ここで画像生成への接続を待ちます）")
+    if st.button("最初に戻る"):
+        st.session_state.step = 1
         st.rerun()
