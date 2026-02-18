@@ -1,11 +1,10 @@
 import streamlit as st
 import google.generativeai as genai
 
-# --- 1. Geminiの設定（Secretsからキーを取得） ---
+# --- 1. Geminiの設定 ---
 if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # ここのクォートを忘れずに！
-   model = genai.GenerativeModel('gemini-1.5-pro')
+    model = genai.GenerativeModel('gemini-1.5-pro')
 else:
     st.error("APIキーが設定されていません。StreamlitのSettings > Secretsを確認してください。")
 
