@@ -4,7 +4,7 @@ import google.generativeai as genai
 # --- 1. Geminiの設定（Secretsからキーを取得） ---
 if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel(gemini-1.5-flash-latest')
 else:
     st.error("APIキーが設定されていません。StreamlitのSettings > Secretsを確認してください。")
 
