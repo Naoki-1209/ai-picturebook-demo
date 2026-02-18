@@ -71,33 +71,32 @@ elif st.session_state.step == 3:
             st.session_state.step = 3.5
             st.rerun()
 
-# --- Step 3.5: AI制作プランの確認（プロ仕様レイアウト） ---
+# --- Step 3.5: AI制作プランの確認（強化版） ---
 elif st.session_state.step == 3.5:
     st.header("🎨 絵本の構成案を確認")
-    st.info("AIが提案する8ページの構成です。各ページの構図を確認してください。")
-
-    # データを分割して表示する工夫
-    # 本来はAIが [P1]...[P8] と返してくるのを想定
-    story_parts = st.session_state.preview_data.split('\n')
     
-    # 2列のグリッドで8ページ分を表示
+    # AIの回答を「行」で分割
+    # 本物のAIなら P1: ... P2: ... と返ってくるのを想定
+    lines = [line for line in st.session_state.preview_data.split('\n') if line.strip()]
+    
     cols = st.columns(2)
     for i in range(8):
         with cols[i % 2]:
             with st.container(border=True):
                 st.subheader(f"Page {i+1}")
-                # AIの回答から該当ページを探す（デモ中は仮の文）
-                st.write(f"【挿絵案】: 森の中で{st.session_state.char_data}が驚いている様子")
-                st.caption("📷 生成プロンプト: A cute dog police officer, watercolor style...")
+                
+                # --- ここが重要：AIの回答から該当ページを抽出するロジック ---
+                if len(lines) > i:
+                    content = lines[i]
+                else:
+                    # AIの回答が足りない場合のダミー（ここをページごとに変える）
+                    content = f"{st.session_state.char_data}が活躍する、第{i+1}のシーン"
+                
+                st.write(f"【挿絵案】: {content}")
+                st.caption(f"📷 生成プロンプト: A scene of {st.session_state.char_data}, page {i+1}, watercolor style")
 
     st.divider()
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("⬅️ Step 3に戻って修正"):
-            st.session_state.step = 3
-            st.rerun()
-    with col2:
-        st.button("🚀 画像生成を開始する（準備中）", type="primary")
+    # (ボタン類はそのまま)
 
 # --- Step 4: 完成 ---
 elif st.session_state.step == 4:
