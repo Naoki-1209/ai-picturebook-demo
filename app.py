@@ -71,17 +71,33 @@ elif st.session_state.step == 3:
             st.session_state.step = 3.5
             st.rerun()
 
-# --- Step 3.5: プラン確認 ---
+# --- Step 3.5: AI制作プランの確認（プロ仕様レイアウト） ---
 elif st.session_state.step == 3.5:
-    st.header("Step 3.5: AI制作プランの確認")
-    st.write(st.session_state.preview_data)
+    st.header("🎨 絵本の構成案を確認")
+    st.info("AIが提案する8ページの構成です。各ページの構図を確認してください。")
+
+    # データを分割して表示する工夫
+    # 本来はAIが [P1]...[P8] と返してくるのを想定
+    story_parts = st.session_state.preview_data.split('\n')
     
-    if st.button("やり直す"):
-        st.session_state.step = 3
-        st.rerun()
-    if st.button("このプランで本番生成へ"):
-        st.session_state.step = 4
-        st.rerun()
+    # 2列のグリッドで8ページ分を表示
+    cols = st.columns(2)
+    for i in range(8):
+        with cols[i % 2]:
+            with st.container(border=True):
+                st.subheader(f"Page {i+1}")
+                # AIの回答から該当ページを探す（デモ中は仮の文）
+                st.write(f"【挿絵案】: 森の中で{st.session_state.char_data}が驚いている様子")
+                st.caption("📷 生成プロンプト: A cute dog police officer, watercolor style...")
+
+    st.divider()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("⬅️ Step 3に戻って修正"):
+            st.session_state.step = 3
+            st.rerun()
+    with col2:
+        st.button("🚀 画像生成を開始する（準備中）", type="primary")
 
 # --- Step 4: 完成 ---
 elif st.session_state.step == 4:
