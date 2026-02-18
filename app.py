@@ -1,61 +1,51 @@
-import streamlit as st
-
 # --- セッション（記憶）の初期化 ---
 if 'step' not in st.session_state:
     st.session_state.step = 1
-if 'char_data' not in st.session_state:
-    st.session_state.char_data = "" # 初期値を空文字に
-if 'story_data' not in st.session_state:
-    st.session_state.story_data = "" # 初期値を空文字に
+# プレビュー用のデータを保存する場所
+if 'preview_data' not in st.session_state:
+    st.session_state.preview_data = None
 
-st.title("📖 AI絵本メーカー (Demo Ver.)")
-
-# --- ステップ1: キャラクター (A) ---
-if st.session_state.step == 1:
-    st.header("Step 1: キャラクターの設定 (A)")
-    # valueに保存済みのデータを指定することで、戻ったときに前回の入力が残る
-    char_input = st.text_area("どんな主人公がいいですか？", value=st.session_state.char_data)
-    if st.button("次へ（ストーリー設定へ）"):
-        st.session_state.char_data = char_input
-        st.session_state.step = 2
-        st.rerun()
-
-# --- ステップ2: お話 (B) ---
-elif st.session_state.step == 2:
-    st.header("Step 2: お話の内容 (B)")
-    # ここも同様に、前回の入力を表示させる
-    story_input = st.text_area("お話のあらすじを書いてください。", value=st.session_state.story_data)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("戻る（キャラ設定へ）"):
-            st.session_state.story_data = story_input # 入力中の中身を保存して戻る
-            st.session_state.step = 1
-            st.rerun()
-    with col2:
-        if st.button("次へ（最終確認へ）"):
-            st.session_state.story_data = story_input
-            st.session_state.step = 3
-            st.rerun()
+# ... (Step 1, 2, 3 のコード) ...
 
 # --- ステップ3: 構成確認 ---
 elif st.session_state.step == 3:
-    st.header("Step 3: 最終確認")
+    st.header("Step 3: 入力内容の最終確認")
+    # (中略：これまでの確認画面)
     
-    st.subheader("現在の設定")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.info(f"**【キャラクター】**\n\n{st.session_state.char_data}")
-        if st.button("A：キャラだけ修正する"):
-            st.session_state.step = 1
-            st.rerun()
-    with c2:
-        st.info(f"**【ストーリー】**\n\n{st.session_state.story_data}")
-        if st.button("B：お話だけ修正する"):
-            st.session_state.step = 2
-            st.rerun()
+    if st.button("AIに下書き（プレビュー）を作らせる"):
+        # ここで本来はGemini APIを叩き、プレビュー用データを生成する
+        st.session_state.preview_data = {
+            "char_prompt": f"【AIの解釈】: {st.session_state.char_data} を反映した、水彩画風の可愛らしいキャラクター",
+            "storyboard": [f"P{i+1}: {st.session_state.story_data[:10]}...のシーンの挿絵案" for i in range(8)]
+        }
+        st.session_state.step = 3.5
+        st.rerun()
+
+# --- ステップ3.5: プレビュー確認 (New!) ---
+elif st.session_state.step == 3.5:
+    st.header("Step 3.5: AIによる制作プランの確認")
+    st.info("AIがあなたの指示を元に、このようなイメージで描き出そうとしています。")
+
+    st.subheader("🖼 キャラクターのビジュアル案")
+    st.write(st.session_state.preview_data["char_prompt"])
     
+    st.subheader("📚 各ページの絵コンテ案")
+    for scene in st.session_state.preview_data["storyboard"]:
+        st.write(f"・{scene}")
+
     st.divider()
-    if st.button("🚀 この内容で絵本を生成する"):
-        st.balloons()
-        st.success("（おめでとうございます！ここからAIが動き出します）")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Step 3に戻って修正する"):
+            st.session_state.step = 3
+            st.rerun()
+    with col2:
+        if st.button("このプランで本番生成を開始！"):
+            st.session_state.step = 4
+            st.rerun()
+
+# --- ステップ4: 生成実行 ---
+elif st.session_state.step == 4:
+    st.header("Step 4: 最終生成プロセス")
+    st.progress(100)
+    st.success("（デモ版：ここでAPIを叩き、実際に画像を8枚生成します）")
