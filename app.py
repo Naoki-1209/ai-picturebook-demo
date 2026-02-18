@@ -5,7 +5,7 @@ import google.generativeai as genai
 if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     # 2026年現在、最も汎用的な名称に変更
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.0-flash')
 else:
     st.error("APIキーが設定されていません。")
 
